@@ -263,3 +263,8 @@ TSWLatexianTemp*
 
 # standalone packages
 *.sta
+
+# pdf output
+*.pdf
+
+.DS_Store
