@@ -39,7 +39,7 @@ jobs:
       displayName: 'Install [LaTeX]'
       #Install LaTeX compiler
     - bash: |
-        latexmk -pdf $(resume) -output-directory=$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber).pdf
+        latexmk --pdf $(Build.SourcesDirectory)/$(resume) -output-directory=$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber).pdf
       displayName: 'Compile [Resume]'
 
       #Publish the pdf resume
