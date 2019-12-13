@@ -35,9 +35,11 @@ jobs:
     steps:
       #Install LaTeX compiler
     - bash: |
-        sudo apt-get install latexmk 
+        sudo apt-get install latexmk
+        sudo apt-get -y install texlive-latex-recommended texlive-pictures texlive-latex-extra
       displayName: 'Install [LaTeX]'
-      #Install LaTeX compiler
+
+      #Compile LaTeX file
     - bash: |
         latexmk --pdf $(Build.SourcesDirectory)/$(resume) -output-directory=$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber).pdf
       displayName: 'Compile [Resume]'
