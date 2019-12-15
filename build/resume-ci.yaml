@@ -60,13 +60,10 @@ stages:
       vmImage: 'ubuntu-latest'
     variables:
       buildConfiguration: 'Release'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                source: 'current'
-                artifactName: 'resume-$(Build.BuildNumber)'
-                targetPath: '$(System.ArtifactsDirectory)/resume'
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          source: 'current'
+          artifactName: 'resume-$(Build.BuildNumber)'
+          targetPath: '$(System.ArtifactsDirectory)/resume'
       
