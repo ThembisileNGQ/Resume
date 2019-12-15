@@ -7,6 +7,8 @@ trigger:
   branches:
     include:
     - master
+    exclude:
+    - release
   
 pr: none
 
@@ -57,9 +59,10 @@ stages:
   jobs:
   - job: CommitToReleaseBranch
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: 'macOS-latest'
     variables:
       buildConfiguration: 'Release'
+    environment: 'Production'
     steps:
       - task: DownloadPipelineArtifact@2
         inputs:
