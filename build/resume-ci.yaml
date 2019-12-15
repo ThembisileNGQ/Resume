@@ -57,16 +57,20 @@ stages:
 
 - stage: Release
   jobs:
-  - job: CommitToReleaseBranch
+  - deployment: CommitToReleaseBranch
+    displayName: 'Commit to Release Branch'
     pool:
       vmImage: 'macOS-latest'
     variables:
       buildConfiguration: 'Release'
     environment: 'Production'
-    steps:
-      - task: DownloadPipelineArtifact@2
-        inputs:
-          source: 'current'
-          artifactName: 'resume-$(Build.BuildNumber)'
-          targetPath: '$(System.ArtifactsDirectory)/resume'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                source: 'current'
+                artifactName: 'resume-$(Build.BuildNumber)'
+                targetPath: '$(System.ArtifactsDirectory)/resume'
       
