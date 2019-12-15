@@ -24,9 +24,10 @@ variables:
 
 name: ${{ format('{0}.{1}.{2}-{3}', variables.year, variables.month, variables.day, variables.project) }}
 
-
-jobs:
-  - job: Build
+stages:
+- stage: Build
+  jobs:
+  - job: BuildAndPublish
     pool:
       vmImage: 'ubuntu-latest'
     variables:
@@ -45,9 +46,27 @@ jobs:
       displayName: 'Compile [Resume]'
 
       #Publish the pdf resume
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       displayName: 'Publish [Compiled Resume]'
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber).pdf' 
+        targetPath: '$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber).pdf' 
         artifactName: 'resume-$(Build.BuildNumber)'
+
+
+- stage: Release
+  jobs:
+  - job: CommitToReleaseBranch
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      buildConfiguration: 'Release'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                source: 'current'
+                artifactName: 'resume-$(Build.BuildNumber)'
+                targetPath: '$(System.ArtifactsDirectory)/resume'
       
