@@ -21,10 +21,10 @@ variables:
   value: $(Month)
 - name: 'day'
   value: $(DayOfMonth)
-- name: 'resume'
-  value: 'resume.tex'
+- name: 'revision'
+  value: $(BuildRevision)
 
-name: ${{ format('{0}.{1}.{2}-{3}', variables.year, variables.month, variables.day, variables.project) }}
+name: ${{ format('{0}.{1}.{2}-{3}-{4}', variables.year, variables.month, variables.day, variables.project, variable.revision) }}
 
 stages:
 - stage: Build
@@ -44,7 +44,7 @@ stages:
 
       #Compile LaTeX file
     - bash: |
-        latexmk --pdf $(Build.SourcesDirectory)/$(resume) -output-directory=$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)
+        latexmk --pdf $(Build.SourcesDirectory)/resume.tex -output-directory=$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)
         cp $(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)/resume.pdf $(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)/lutando-resume-latest.pdf
       displayName: 'Compile [Resume]'
 
@@ -70,11 +70,11 @@ stages:
         deploy:
           steps:
               # Get artefacts from build stage
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                source: 'current'
-                artifactName: 'resume-$(Build.BuildNumber)'
-                targetPath: '$(System.ArtifactsDirectory)'
+          #  - task: DownloadPipelineArtifact@2
+          #    inputs:
+          #      source: 'current'
+          #      artifactName: 'resume-$(Build.BuildNumber)'
+          #      targetPath: '$(System.ArtifactsDirectory)'
 
               # Install SSH key for git purposes
             - task: InstallSSHKey@0
