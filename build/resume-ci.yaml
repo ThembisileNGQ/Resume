@@ -1,0 +1,100 @@
+# Resume Master CI CD pipeline definition
+# This definition is responsible for verifying and bundling
+# the template in the master branch. It pushes artefacts
+# to the artefacts directory to be used in release later.
+
+trigger:
+  branches:
+    include:
+    - master
+    exclude:
+    - release
+  
+pr: none
+
+variables:
+- name: 'project'
+  value: 'resume'
+- name: 'year'
+  value: $(Year:yy)
+- name: 'month'
+  value: $(Month)
+- name: 'day'
+  value: $(DayOfMonth)
+- name: 'resume'
+  value: 'resume.tex'
+
+name: ${{ format('{0}.{1}.{2}-{3}', variables.year, variables.month, variables.day, variables.project) }}
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildAndPublish
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      buildConfiguration: 'Release'
+
+    steps:
+      #Install LaTeX compiler
+    - bash: |
+        sudo apt-get install latexmk
+        sudo apt-get -y install texlive-latex-recommended texlive-pictures texlive-latex-extra
+      displayName: 'Install [LaTeX]'
+
+      #Compile LaTeX file
+    - bash: |
+        latexmk --pdf $(Build.SourcesDirectory)/$(resume) -output-directory=$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)
+        cp $(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)/resume.pdf $(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)/lutando-resume-latest.pdf
+      displayName: 'Compile [Resume]'
+
+      #Publish the pdf resume
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish [Compiled Resume]'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/resume-$(Build.BuildNumber)/lutando-resume-latest.pdf' 
+        artifactName: 'resume-$(Build.BuildNumber)'
+
+
+- stage: Release
+  jobs:
+  - deployment: CommitToReleaseBranch
+    displayName: 'Commit to Release Branch'
+    pool:
+      vmImage: 'macOS-latest'
+    variables:
+      buildConfiguration: 'Release'
+    environment: 'Production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+              # Get artefacts from build stage
+            - task: DownloadPipelineArtifact@2
+              inputs:
+                source: 'current'
+                artifactName: 'resume-$(Build.BuildNumber)'
+                targetPath: '$(System.ArtifactsDirectory)'
+
+              # Install SSH key for git purposes
+            - task: InstallSSHKey@0
+              displayName: 'Install SSH Key'
+              inputs:
+                knownHostsEntry: 'github.com,140.82.118.4 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=='
+                sshPublicKey: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDjxZwil3qsPVDKFo9L1tTDRks5E0nnwhdkiRArjtWuq9eTPG8RFEZfbV8YOHw4GKYIYAASRo4fLVBrimJB67v3EABtorYOoRMBrG8Z8oYj8E0rPWHVLqVs95Jv23A0VVl7xCnJd24BrLx9gGyScq6xJwgKaLVrpFudVTzhEDDdT19Fpqu7kvpCNm73o18RHQRfdB0z2gWwsNwm777QwIaS91l1uwj0oy2/x3ERPM9AcfkeIn1kcujzd9p4srW/89Um0teytImMqPXfoF+HLSRgBcsp4YTvddSZflWaoEsmfPtJ9QcY+8cqINr4yJfwC7B2BoD+2xU0o7v0XXd6YkuSmpAGfrwebn4mlVCJKYxlGHJzAdmGX07Fo+PKxSbBZNCTVbfl5XVpBZRncq6aMS6abFRRG1DiDkOXRNhhxai6O4xhJP/G8aUVjAFUBIEcZOuP/knz8K40GFuv1Gm9HmOvvz+X8hjx8GxFheEpRCgw3CLzAlmrq/4fxSGDfmMt1fxHSBnEvFW2x3gYVE9qqIBiqmCDz2K+s8qC7lbdgRDhtdzrTJtj21Ap/0XIcGUpWbywoDSq0J9Lv6/Mb0vEccJ3AWpZ6Ri+8aCoNenGmMivxrz4ZXl0jlUXWR9AZT/SNLRYneqB3/3vWu6v5Wm18cz6QPZ6GjS4613KtF6EHu4iyQ== lutando@ngqakaza.com'
+                sshKeySecureFile: 'id_resume_azuredevops_github'
+
+              #Get Repo
+            - bash: |
+                git clone git@github.com:Lutando/Resume.git '$(System.ArtifactsDirectory)/Git'
+              displayName: 'Git Pull [Resume]'
+
+              #Get Repo
+            - bash: |
+                git checkout release
+                cp $(System.ArtifactsDirectory)/lutando-resume-latest.pdf $(System.ArtifactsDirectory)/Git
+                git commit -am "Updated from $(Build.BuildNumber)"
+                git push --set-upstream origin release
+              workingDirectory: '$(System.ArtifactsDirectory)/Git'
+              displayName: 'Git Commit & Push [Resume]'
+      
