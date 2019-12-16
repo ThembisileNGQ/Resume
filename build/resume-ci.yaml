@@ -24,7 +24,7 @@ variables:
 - name: 'revision'
   value: $(BuildRevision)
 
-name: ${{ format('{0}.{1}.{2}-{3}-{4}', variables.year, variables.month, variables.day, variables.project, variable.revision) }}
+name: ${{ format('{0}.{1}.{2}-{3}-{4}', variables.year, variables.month, variables.day, variables.project, variables.revision) }}
 
 stages:
 - stage: Build
