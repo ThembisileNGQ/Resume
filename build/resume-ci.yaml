@@ -69,13 +69,6 @@ stages:
       runOnce:
         deploy:
           steps:
-              # Get artefacts from build stage
-          #  - task: DownloadPipelineArtifact@2
-          #    inputs:
-          #      source: 'current'
-          #      artifactName: 'resume-$(Build.BuildNumber)'
-          #      targetPath: '$(System.ArtifactsDirectory)'
-
               # Install SSH key for git purposes
             - task: InstallSSHKey@0
               displayName: 'Install SSH Key'
@@ -89,7 +82,7 @@ stages:
                 git clone git@github.com:Lutando/Resume.git '$(System.ArtifactsDirectory)/Git'
               displayName: 'Git Pull [Resume]'
 
-              #Get Repo
+              #Push new resume to release
             - bash: |
                 git checkout release
                 cp $(System.ArtifactsDirectory)/lutando-resume-latest.pdf $(System.ArtifactsDirectory)/Git
