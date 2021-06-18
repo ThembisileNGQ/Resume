@@ -90,6 +90,7 @@ stages:
               #Push new resume to release
             - bash: |
                 git checkout release
+                ls -la
                 cp $(Pipeline.Workspac)/lutando-resume-latest.pdf $(System.ArtifactsDirectory)/Git
                 git commit -am "Updated from $(Build.BuildNumber)"
                 git push --set-upstream origin release
