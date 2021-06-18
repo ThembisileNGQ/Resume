@@ -101,9 +101,15 @@ stages:
 
               #Push new resume to release
             - bash: |
+                ls -la
+              workingDirectory: '$(Pipeline.Workspace)/resume-$(Build.BuildNumber)'
+              displayName: 'check folder pw'
+
+              #Push new resume to release
+            - bash: |
                 git checkout release
                 ls -la
-                cp $(System.ArtifactsDirectory)/lutando-resume-latest.pdf $(System.ArtifactsDirectory)/Git
+                cp $(Pipeline.Workspace)/resume-$(Build.BuildNumber)/lutando-resume-latest.pdf $(System.ArtifactsDirectory)/Git
                 git commit -am "Updated from $(Build.BuildNumber)"
                 git push --set-upstream origin release
               workingDirectory: '$(System.ArtifactsDirectory)/Git'
